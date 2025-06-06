@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/boards")
+@RequestMapping("/api/boards")
 public class BoardController {
 
     private final BoardService boardService;
