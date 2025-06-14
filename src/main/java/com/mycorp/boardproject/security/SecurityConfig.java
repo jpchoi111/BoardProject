@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @RequiredArgsConstructor
@@ -33,18 +34,26 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // Enable H2 console in iframe
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/members/register",
-                                "/api/members/login",
-                                "/h2/**",
-                                "/boards/**"
-                        ).permitAll()
+                        // Public endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/members/register", "/api/members/login").permitAll()
+                        .requestMatchers("/h2/**").permitAll()
+
+                        // Allow GET requests to /api/boards/**
+                        .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
+
+                        // Require authentication for board create, update, delete
+                        .requestMatchers(HttpMethod.POST, "/api/boards/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/boards/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/boards/**").authenticated()
+
+                        // Any other request requires authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
     /**
      * BCrypt password encoder bean.
